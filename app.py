@@ -41,7 +41,8 @@ class livePredictions:
         self.loaded_model = keras.models.load_model(self.path)
         # print("loading model ", self.loaded_model)
         return self.loaded_model
-
+    
+    ###  function ทำนายอารมณ์จากเสียง 
     def makepredictions(self):
         """
         Method to process the files and create your features.
@@ -73,7 +74,7 @@ class livePredictions:
                             '6': 'disgust',
                             '7': 'surprised'}
 
-        ## ระบบจะทำการ predict และ เขียนผลลงใน emotion_voice ตรงนี้ ##
+        ## ระบบจะทำการหา index ของอารมณ์ จาก function makepredictions และ เขียนผลลงใน emotion_voice ตรงนี้ ##
         for key, value in label_conversion.items():
             if int(key) == pred:
                 label = value
