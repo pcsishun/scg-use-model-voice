@@ -15,8 +15,6 @@ import os
 
 filename="test.wav"
 
-
-
 class livePredictions:
     """
     Main class of the application.
@@ -75,6 +73,7 @@ class livePredictions:
                             '6': 'disgust',
                             '7': 'surprised'}
 
+        ## ระบบจะทำการ predict และ เขียนผลลงใน emotion_voice ตรงนี้ ##
         for key, value in label_conversion.items():
             if int(key) == pred:
                 label = value
@@ -84,12 +83,9 @@ class livePredictions:
                 write_f.close()
         # return label
 
-# Here you can replace path and file with the path of your model and of the file 
-#from the RAVDESS dataset you want to use for the prediction,
-# Below, I have used a neutral file: the prediction made is neutral.
-
 def app_start():
     try:
+        ## set การเปิดการทำงานด้วยเสียง
         print("start app...")
         accesskey = "4QUFReTvGjJJnCxTrw7JPgATaHClIGekXV/cuJzYYD6cO3K4fs3qMA=="
         porcupine = pvporcupine.create(access_key=accesskey,keywords=["computer", "alexa"])
@@ -102,6 +98,7 @@ def app_start():
             frames_per_buffer=porcupine.frame_length)
  
         while True:
+            ## คำสั่งเปิดการทำงานด้วยเสียง 
             pcm = audio_stream.read(porcupine.frame_length)
             pcms = struct.unpack_from("h" * porcupine.frame_length, pcm)
             keyword_index = porcupine.process(pcms)
@@ -109,14 +106,16 @@ def app_start():
 
             if keyword_index >= 0:
                 print("startRecord")
+                ## สั่งบันทึกเสียง 4 วิ
                 recorder.record(filename)
+                ## สั่งทำนายเสียง
                 pred = livePredictions(path='SER_model.h5',file='test.wav')
+                pred.load_model() # โหลด model 
+                pred.makepredictions() # ทำนายผล 
 
-                pred.load_model()
-                pred.makepredictions()
-                os.remove("test.wav")
+                os.remove("test.wav") # ลบไฟล์เสียงออก
                 print("finish predict")
-                break
+                break # ออกลูปการบันทึกเสียงเพื่อทำนายอารมณ์
     
                 
     except:
@@ -132,6 +131,7 @@ def app_start():
             print("End")
 
 
+## เรียกใช้งาน app เเละทำการ loop inf. ##
 action = True
 while action == True:
     print("action..")
