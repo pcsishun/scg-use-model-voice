@@ -27,15 +27,11 @@ class livePredictions:
         Init method is used to initialize the main parameters.
         path="SER_model.h5", file="test.wav"
         """
-
-        print("path ===> ", path)
-        print("file ===>", file)
+ 
 
         self.path = "SER_model.h5" # put model here
         self.file = "test.wav" # put voice here
-
-        print("path ===> ", path)
-        print("file ===>", file)  
+ 
     
     def load_model(self):
         """
@@ -83,7 +79,10 @@ class livePredictions:
             if int(key) == pred:
                 label = value
                 print("predict ===> ",label)
-        return label
+                write_f = open("emotion_voice.txt", "w")
+                write_f.write(label)
+                write_f.close()
+        # return label
 
 # Here you can replace path and file with the path of your model and of the file 
 #from the RAVDESS dataset you want to use for the prediction,
