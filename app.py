@@ -2,6 +2,7 @@
 This file can be used to try a live prediction. 
 """
 
+# from http import client
 import keras
 import numpy as np
 import librosa
@@ -9,11 +10,16 @@ import recorder
 import pvporcupine
 import pyaudio
 import struct
+from time import sleep
+
 import os
 
 # from tensorflow import keras 
 
 filename="test.wav"
+# connection_string = "mongodb://localhost:27017/" ## connect to local host ## 
+
+
 
 class livePredictions:
     """
@@ -39,7 +45,6 @@ class livePredictions:
         """
         print("loading model ==>", self.path)
         self.loaded_model = keras.models.load_model(self.path)
-        # print("loading model ", self.loaded_model)
         return self.loaded_model
     
     ###  function ทำนายอารมณ์จากเสียง 
@@ -49,13 +54,10 @@ class livePredictions:
         """
         print("loading file ===>", self.file)
         data, sampling_rate = librosa.load(self.file)
-        # print("loading file", self.file)
+        
         mfccs = np.mean(librosa.feature.mfcc(y=data, sr=sampling_rate, n_mfcc=40).T, axis=0)
         x = np.expand_dims(mfccs, axis=1)
         x = np.expand_dims(x, axis=0)
-        # predictions = self.loaded_model.predict_classes(x)
-        # print("Prediction is", " ", self.convertclasstoemotion(predictions))
-
         predictions = self.loaded_model.predict_classes(x)
         self.convertclasstoemotion(predictions)
 
@@ -64,19 +66,20 @@ class livePredictions:
         """
         Method to convert the predictions (int) into human readable strings.
         """
-        
-        label_conversion = {'0': 'neutral',
-                            '1': 'calm',
-                            '2': 'happy',
-                            '3': 'sad',
-                            '4': 'angry',
-                            '5': 'fearful',
-                            '6': 'disgust',
-                            '7': 'surprised'}
+        print("pred ===> ",pred)
+        label_conversion = {'0': 'Voice emotion: neutral',
+                            '1': 'Voice emotion: calm',
+                            '2': 'Voice emotion: happy',
+                            '3': 'Voice emotion: sad',
+                            '4': 'Voice emotion: angry',
+                            '5': 'Voice emotion: fearful',
+                            '6': 'Voice emotion: disgust',
+                            '7': 'Voice emotion: surprised'}
 
         ## ระบบจะทำการหา index ของอารมณ์ จาก function makepredictions และ เขียนผลลงใน emotion_voice ตรงนี้ ##
         for key, value in label_conversion.items():
             if int(key) == pred:
+                print("key ===> ",key)
                 label = value
                 print("predict ===> ",label)
                 write_f = open("emotion_voice.txt", "w")
@@ -84,40 +87,57 @@ class livePredictions:
                 write_f.close()
         # return label
 
+def sleep_function(num):
+    print(f'Waiting for start record in {num} seconds.')
+    sleep(num)
+    print("Start recording...")
+    
+
 def app_start():
     try:
         ## set การเปิดการทำงานด้วยเสียง
         print("start app...")
-        accesskey = "4QUFReTvGjJJnCxTrw7JPgATaHClIGekXV/cuJzYYD6cO3K4fs3qMA=="
+        accesskey = "PSMtKVzOysHScGy5g2mgc2ClrX1Xf/PYYafb4o7kQQMUsZmrbBAR1Q=="
         porcupine = pvporcupine.create(access_key=accesskey,keywords=["computer", "alexa"])
         pa = pyaudio.PyAudio()
         audio_stream = pa.open(
+            # rate=porcupine.sample_rate,
             rate=porcupine.sample_rate,
             channels=1,
             format=pyaudio.paInt16,
             input=True,
-            frames_per_buffer=porcupine.frame_length)
- 
+            # frames_per_buffer=porcupine.frame_length
+            frames_per_buffer=porcupine.frame_length
+        )
+        
+        print("app listening voice...")
         while True:
+            # สั่งใช้งาน function ปิดการทำงาน 
             ## คำสั่งเปิดการทำงานด้วยเสียง 
+
             pcm = audio_stream.read(porcupine.frame_length)
             pcms = struct.unpack_from("h" * porcupine.frame_length, pcm)
             keyword_index = porcupine.process(pcms)
-            print(keyword_index)
 
             if keyword_index >= 0:
-                print("startRecord")
-                ## สั่งบันทึกเสียง 4 วิ
-                recorder.record(filename)
-                ## สั่งทำนายเสียง
-                pred = livePredictions(path='SER_model.h5',file='test.wav')
-                pred.load_model() # โหลด model 
-                pred.makepredictions() # ทำนายผล 
+                print("is recording")
+                write_f = open("emotion_voice.txt", "w")
+                write_f.write("Start recording...")
+                write_f.close()
+                while True:
+                    ## หน่วงเวลา 5 วิ
+                    sleep_function(5)
 
-                os.remove("test.wav") # ลบไฟล์เสียงออก
-                print("finish predict")
-                break # ออกลูปการบันทึกเสียงเพื่อทำนายอารมณ์
-    
+                    ## สั่งบันทึกเสียง 10 วิ
+                    recorder.record(filename)
+
+                    ## สั่งทำนายเสียง
+                    pred = livePredictions(path='SER_model.h5',file='test.wav')
+                    pred.load_model() # โหลด model 
+                    pred.makepredictions() # ทำนายผล 
+                    os.remove("test.wav") # ลบไฟล์เสียงออก
+                    print("finish predict")
+        
                 
     except:
         print("error detect!")
@@ -131,6 +151,7 @@ def app_start():
             pa.terminate()
             print("End")
 
+app_start()
 
 ## เรียกใช้งาน app เเละทำการ loop inf. ##
 action = True
