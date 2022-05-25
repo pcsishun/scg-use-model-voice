@@ -1,7 +1,3 @@
-"""
-This file can be used to try a live prediction. 
-"""
-
 # from http import client
 import keras
 import numpy as np
@@ -17,7 +13,6 @@ import json
 
 
 import os
-
 # from tensorflow import keras 
 
 filename="./voice.wav"
@@ -100,109 +95,126 @@ def sleep_function(num):
 
 def func_analyze_entity_sentiment(text_content):
 
-    client = language_v1.LanguageServiceClient.from_service_account_file('./keys.json')
-    type_ = language_v1.types.Document.Type.PLAIN_TEXT
+    try:
+        client = language_v1.LanguageServiceClient.from_service_account_file('./keys.json')
+        type_ = language_v1.types.Document.Type.PLAIN_TEXT
+        print("set type_ and client connection")
 
-    language = "en"
-    document = {"content": text_content, "type_": type_, "language": language}
+        language = "en"
+        document = {"content": text_content, "type_": type_, "language": language}
+        print("set language and document")
 
-    encoding_type = language_v1.EncodingType.UTF8
+        encoding_type = language_v1.EncodingType.UTF8
+        print("set encoding")
 
-    response = client.analyze_entity_sentiment(request = {'document': document, 'encoding_type': encoding_type})
+        response = client.analyze_entity_sentiment(request = {'document': document, 'encoding_type': encoding_type})
+        print("call back response sentiment")
 
-    is_word = open(text_content, 'r')
+        is_word = open(text_content, 'r')
 
-    for entity in response.entities:
+        for entity in response.entities:
 
-        sentiment = entity.sentiment
+            sentiment = entity.sentiment
 
-        if sentiment.score >= 0.8:
+            if sentiment.score >= 0.8:
 
-            set_json_object = {
-                "word": is_word.read(),
-                "select_lang": response.language,
-                "sentiment_score": sentiment.score,
-                "sentiment_magnitude": sentiment.magnitude,
-                "feeling": "very positive"
-            } 
+                set_json_object = {
+                    "word": is_word.read(),
+                    "select_lang": response.language,
+                    "sentiment_score": sentiment.score,
+                    "sentiment_magnitude": sentiment.magnitude,
+                    "feeling": "very positive"
+                } 
 
-            with open("sentiment.json", "w") as outfile:
-                json.dump(set_json_object, outfile)
+                with open("sentiment.json", "w") as outfile:
+                    json.dump(set_json_object, outfile)
 
-        elif sentiment.score >= 0.3 and sentiment.score < 0.8:
-            set_json_object = {
-                "word": is_word.read(),
-                "select_lang": response.language,
-                "sentiment_score": sentiment.score,
-                "sentiment_magnitude": sentiment.magnitude,
-                "feeling": "positive"
-            }
+            elif sentiment.score >= 0.3 and sentiment.score < 0.8:
+                set_json_object = {
+                    "word": is_word.read(),
+                    "select_lang": response.language,
+                    "sentiment_score": sentiment.score,
+                    "sentiment_magnitude": sentiment.magnitude,
+                    "feeling": "positive"
+                }
 
-            with open("sentiment.json", "w") as outfile:
-                json.dump(set_json_object, outfile)
+                with open("sentiment.json", "w") as outfile:
+                    json.dump(set_json_object, outfile)
 
-        elif sentiment.score >= -0.3 and sentiment.score < 0.3:
-            set_json_object = {
-                "word": is_word.read(),
-                "select_lang": response.language,
-                "sentiment_score": sentiment.score,
-                "sentiment_magnitude": sentiment.magnitude,
-                "feeling": "natural"
-            }
+            elif sentiment.score >= -0.3 and sentiment.score < 0.3:
+                set_json_object = {
+                    "word": is_word.read(),
+                    "select_lang": response.language,
+                    "sentiment_score": sentiment.score,
+                    "sentiment_magnitude": sentiment.magnitude,
+                    "feeling": "natural"
+                }
 
-            with open("sentiment.json", "w") as outfile:
-                json.dump(set_json_object, outfile)
-        elif sentiment.score >= -0.8 and sentiment.score < -0.3:
-            set_json_object = {
-                "word": is_word.read(),
-                "select_lang": response.language,
-                "sentiment_score": sentiment.score,
-                "sentiment_magnitude": sentiment.magnitude,
-                "feeling": "negative"
-            }
-            
-            with open("sentiment.json", "w") as outfile:
-                json.dump(set_json_object, outfile)
-        else:
-            set_json_object = {
-                "word": is_word.read(),
-                "select_lang": response.language,
-                "sentiment_score": sentiment.score,
-                "sentiment_magnitude": sentiment.magnitude,
-                "feeling": "very negative"
-            }
+                with open("sentiment.json", "w") as outfile:
+                    json.dump(set_json_object, outfile)
+            elif sentiment.score >= -0.8 and sentiment.score < -0.3:
+                set_json_object = {
+                    "word": is_word.read(),
+                    "select_lang": response.language,
+                    "sentiment_score": sentiment.score,
+                    "sentiment_magnitude": sentiment.magnitude,
+                    "feeling": "negative"
+                }
+                
+                with open("sentiment.json", "w") as outfile:
+                    json.dump(set_json_object, outfile)
+            else:
+                set_json_object = {
+                    "word": is_word.read(),
+                    "select_lang": response.language,
+                    "sentiment_score": sentiment.score,
+                    "sentiment_magnitude": sentiment.magnitude,
+                    "feeling": "very negative"
+                }
 
-            with open("sentiment.json", "w") as outfile:
-                json.dump(set_json_object, outfile)
+                with open("sentiment.json", "w") as outfile:
+                    json.dump(set_json_object, outfile)
+    except Exception as error:
+        print("sentiment error ==>", error)
 
 
  
 
 def func_speech_to_text(voice_path):
-    client = speech.SpeechClient.from_service_account_file('./keys.json')
-    voice_path = voice_path
+    print("start convert voice to text.")
+    try:
+        client = speech.SpeechClient.from_service_account_file('./keys.json')
+        voice_path = voice_path
+        print("voice_path ===>", voice_path)
 
-    with open(voice_path,'rb') as f:
-        voice_data = f.read()
+        with open(voice_path,'rb') as f:
+            voice_data = f.read()
+            print("create voice_data")
 
-    audio_file = speech.RecognitionAudio(content=voice_data)
+        audio_file = speech.RecognitionAudio(content=voice_data)
+        print("set audio_file")
 
-    
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=44100,
-        language_code="en-US", 
-        audio_channel_count=2
-    )
 
-    response = client.recognize(config=config, audio=audio_file)
+        
+        config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=44100,
+            language_code="en-US", 
+            audio_channel_count=1
+        )
+        print("set config")
 
-    for result in response.results:
-        # print("Transcript: {}".format(result.alternatives[0].transcript))
-        write_f = open("voice_text.txt", "w")
-        write_f.write(result.alternatives[0].transcript)
-        write_f.close()
+        response = client.recognize(config=config, audio=audio_file)
+        print("call back response")
 
+        for result in response.results:
+            # print("Transcript: {}".format(result.alternatives[0].transcript))
+            write_f = open("voice_text.txt", "w")
+            write_f.write(result.alternatives[0].transcript)
+            write_f.close()
+            print(result.alternatives[0].transcript)
+    except Exception as error:
+        print("error ==> ",error)   
 
 
     
