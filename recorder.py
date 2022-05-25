@@ -5,11 +5,11 @@ import wave
 def record(filename):
     print("In recorder function!")
     chunk = 1024
-    FORMAT = pyaudio.paInt16
+    FORMAT = pyaudio.paInt16 
     # mono, change to 2 if you want stereo
-    channels = 1
+    channels = 1 ## for using debug is 1 
     sample_rate = 44100
-    record_seconds = 10
+    record_seconds = 10 ## default from model is 4 sec
     p = pyaudio.PyAudio()
     print("setting all config stream")
     stream = p.open(format=FORMAT,
